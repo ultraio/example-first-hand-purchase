@@ -21,6 +21,7 @@
                             <div class="text-sm font-bold">ID {{ factory.id }}</div>
                             <div>( {{ getUniqCount(factory.id) }} / {{ getCountRequired(swap, factory.id) }} )</div>
                         </div>
+                        <div class="text-xs">{{ getStrategyName(getStrategy(swap, factory.id)) }}</div>
                     </div>
                 </div>
                 <button
@@ -51,6 +52,23 @@ let selected_swap = ref<FactoryPurchaseReq | undefined>(undefined);
 
 function getCountRequired(requirement: FactoryPurchaseReq, factory_id: number): number {
     return requirement.purchase_option_with_uniqs.factories.find((x) => x.token_factory_id == factory_id).count;
+}
+
+function getStrategy(requirement: FactoryPurchaseReq, factory_id: number): number {
+    return requirement.purchase_option_with_uniqs.factories.find((x) => x.token_factory_id == factory_id).strategy;
+}
+
+function getStrategyName(id: number): string {
+    switch (id) {
+        case 0:
+            return 'Tokens will be verified for ownership during swap process';
+        case 1:
+            return 'Tokens will be burnt from inventory during swap process';
+        case 2:
+            return 'Tokens will be transferred from inventory during swap process';
+    }
+
+    return 'check';
 }
 
 function clearData() {
