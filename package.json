@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ultraos/ultra-api-lib": "^1.1.0",
     "vue": "^3.3.8"
   },
   "devDependencies": {
