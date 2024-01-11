@@ -25,13 +25,21 @@
                     </div>
                 </div>
                 <button
-                    @click="selected_swap = swap"
+                    @click="selectSwap(swap)"
                     class="bg-purple-500 hover:bg-purple-400 active:bg-purple-600 p-2 font-bold rounded-lg"
                 >
                     Swap this Uniq
                 </button>
             </div>
         </template>
+        <SwapUniq
+            v-else
+            :username="$props.username"
+            :uniqs="user_uniqs"
+            :swap="selected_swap"
+            :factory="props.factory"
+            @cancel="selected_swap = undefined"
+        />
     </div>
 </template>
 
@@ -41,14 +49,23 @@ import { FactoryPurchaseReq } from '../interfaces/FactoryPurchaseReq';
 import * as FactoryHelper from '../utility/factory';
 import { I, UltraAPI } from '@ultraos/ultra-api-lib';
 
-const props = defineProps<{ factoryPurchaseOptions: FactoryPurchaseReq[]; username: string; chain: string }>();
+const props = defineProps<{
+    factoryPurchaseOptions: FactoryPurchaseReq[];
+    username: string;
+    chain: string;
+    factory: number;
+}>();
 
 let isRefreshing = ref<boolean>(false);
 let user_uniqs = ref<I.Uniq[]>([]);
-let user_available_swaps = ref<FactoryPurchaseReq[]>([]);
+let user_available_swaps = ref<(FactoryPurchaseReq & { index: number })[]>([]);
 let uniq_factories = ref<{ [requirement_id: string]: I.ResponseFactory[] }>({});
 
 let selected_swap = ref<FactoryPurchaseReq | undefined>(undefined);
+
+function selectSwap(swap: FactoryPurchaseReq & { index: number }) {
+    selected_swap.value = swap;
+}
 
 function getCountRequired(requirement: FactoryPurchaseReq, factory_id: number): number {
     return requirement.purchase_option_with_uniqs.factories.find((x) => x.token_factory_id == factory_id).count;
@@ -91,12 +108,15 @@ function getUniqCount(factory_id: number): number {
 }
 
 async function findSwappableUniqs(api: UltraAPI) {
+    let index = 0;
     for (let purchaseOption of props.factoryPurchaseOptions) {
         if (!purchaseOption.purchase_option_with_uniqs) {
+            index += 1;
             continue;
         }
 
         if (purchaseOption.purchase_option_with_uniqs.factories.length <= 0) {
+            index += 1;
             continue;
         }
 
@@ -119,10 +139,12 @@ async function findSwappableUniqs(api: UltraAPI) {
 
         uniq_factories.value[purchaseOption.id] = factories;
         if (!meetsRequirements) {
+            index += 1;
             continue;
         }
 
-        user_available_swaps.value.push(purchaseOption);
+        user_available_swaps.value.push({ ...purchaseOption, index });
+        index += 1;
     }
 }
 

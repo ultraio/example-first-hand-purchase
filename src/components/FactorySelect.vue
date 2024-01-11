@@ -10,7 +10,7 @@
                     v-model="factory_id"
                     class="ml-4 p-2 flex-grow rounded bg-neutral-950 text-neutral-200 pl-4 border border-neutral-700 focus:outline-none pr-4"
                     placeholder="Example: 4030"
-                    type="text"
+                    type="number"
                 />
             </div>
             <button
@@ -29,7 +29,7 @@ import * as FactoryHelper from '../utility/factory';
 import { FactoryPurchaseReq } from '../interfaces/FactoryPurchaseReq';
 
 const props = defineProps<{ username: string; chain: string }>();
-const emits = defineEmits<{ (e: 'update-purchase-options', options: FactoryPurchaseReq[]): void }>();
+const emits = defineEmits<{ (e: 'update-purchase-options', options: FactoryPurchaseReq[], factory: number): void }>();
 
 let factory_id = ref<string>();
 let isRefreshing = ref<boolean>(false);
@@ -44,7 +44,7 @@ async function refresh() {
     }
 
     const options = await FactoryHelper.getFactoryPurchase(api, factory_id.value);
-    emits('update-purchase-options', options);
+    emits('update-purchase-options', options, parseInt(factory_id.value));
     isRefreshing.value = false;
 }
 </script>

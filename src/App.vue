@@ -18,6 +18,7 @@
                     v-if="factory_purchase_options.length >= 1"
                     :username="username"
                     :chain="chain"
+                    :factory="factory"
                     :factory-purchase-options="factory_purchase_options"
                 />
             </div>
@@ -32,13 +33,15 @@ import { FactoryPurchaseReq } from './interfaces/FactoryPurchaseReq';
 let username = ref<string>(undefined);
 let chain = ref<string>(undefined);
 let factory_purchase_options = ref<FactoryPurchaseReq[]>([]);
+let factory = ref<number>(-1);
 
 function updateUsername(new_username: string, chain_id: string) {
     username.value = new_username;
     chain.value = chain_id;
 }
 
-function updatePurchaseOptions(options: FactoryPurchaseReq[]) {
+function updatePurchaseOptions(options: FactoryPurchaseReq[], selected_factory: number) {
+    factory.value = selected_factory;
     factory_purchase_options.value = options;
 }
 </script>
