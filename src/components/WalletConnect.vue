@@ -2,13 +2,13 @@
     <div class="flex flex-row w-full justify-between items-center">
         <template v-if="props.username">
             <p>{{ username }}</p>
-            <button @click="disconnect" class="bg-purple-500 hover:bg-purple-400 active:bg-purple-600 p-2 rounded-lg">
+            <button @click="disconnect" class="bg-purple-500 hover:bg-purple-400 active:bg-purple-600 p-2 rounded">
                 Disconnect
             </button>
         </template>
         <template v-else>
             <span class="text-lg font-bold">Not Connected</span>
-            <button @click="connect" class="bg-purple-500 hover:bg-purple-400 active:bg-purple-600 p-2 rounded-lg">
+            <button @click="connect" class="bg-purple-500 hover:bg-purple-400 active:bg-purple-600 p-2 rounded">
                 Connect
             </button>
         </template>

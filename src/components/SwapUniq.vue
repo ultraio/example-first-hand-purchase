@@ -72,12 +72,12 @@ async function finalizeRequirements() {
             contract: 'eosio.nft.ft',
             data: {
                 purchase: {
-                    token_factory_id: props.factory,
+                    token_factory_id: props.factory, // 4030
                     index: props.swap.index,
-                    max_price: props.swap.price,
+                    max_price: '100.00000000 UOS',
                     buyer: props.username,
                     receiver: props.username,
-                    promoter_id: '',
+                    promoter_id: null,
                     user_uniqs: {
                         tokens,
                     },
@@ -90,9 +90,13 @@ async function finalizeRequirements() {
     try {
         const result = await window['ultra'].signTransaction(trx);
         console.log(result);
+        alert(result.toString());
     } catch (err) {
         console.log(err);
+        alert(err.toString());
     }
+
+    emits('cancel');
 }
 
 function meetsAllRequirements() {

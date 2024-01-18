@@ -20,6 +20,7 @@
                     :chain="chain"
                     :factory="factory"
                     :factory-purchase-options="factory_purchase_options"
+                    @cancel="handleCancel"
                 />
             </div>
         </div>
@@ -34,6 +35,11 @@ let username = ref<string>(undefined);
 let chain = ref<string>(undefined);
 let factory_purchase_options = ref<FactoryPurchaseReq[]>([]);
 let factory = ref<number>(-1);
+
+function handleCancel() {
+    factory.value = -1;
+    factory_purchase_options.value = [];
+}
 
 function updateUsername(new_username: string, chain_id: string) {
     username.value = new_username;

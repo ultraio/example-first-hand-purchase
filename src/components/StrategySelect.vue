@@ -26,11 +26,12 @@
                 </div>
                 <button
                     @click="selectSwap(swap)"
-                    class="bg-purple-500 hover:bg-purple-400 active:bg-purple-600 p-2 font-bold rounded-lg"
+                    class="bg-purple-500 hover:bg-purple-400 active:bg-purple-600 p-2 font-bold rounded"
                 >
                     Swap this Uniq
                 </button>
             </div>
+            <button @click="emits('cancel')" class="bg-red-500 rounded p-2 mt-2 hover:bg-red-400">Go Back</button>
         </template>
         <SwapUniq
             v-else
@@ -55,6 +56,8 @@ const props = defineProps<{
     chain: string;
     factory: number;
 }>();
+
+const emits = defineEmits<{ (e: 'cancel'): void }>();
 
 let isRefreshing = ref<boolean>(false);
 let user_uniqs = ref<I.Uniq[]>([]);
