@@ -10,10 +10,10 @@
                 <div class="flex flex-row gap-2 flex-wrap mt-2" v-if="updateIndex">
                     <button
                         v-for="user_uniq in getSelectableUniqs(uniq.token_factory_id)"
-                        :key="updateIndex"
+                        :key="user_uniq.token_factory_id + user_uniq.serial_number + updateIndex"
                         class="p-2 rounded hover:bg-neutral-600"
                         :class="getUniqClasses(user_uniq)"
-                        @click="toggleUniq(user_uniq)"
+                        @click="toggleUniq(user_uniq, uniq)"
                     >
                         {{ user_uniq.token_factory_id }}#{{ user_uniq.serial_number }}
                     </button>
@@ -123,13 +123,14 @@ function getCountLeft(token_factory_id: number, max_count: number) {
     return max_count - selection[token_factory_id].length;
 }
 
-function toggleUniq(uniq: I.Uniq) {
+function toggleUniq(uniq: I.Uniq, requirement: SwapRequirement) {
     if (!selection[uniq.token_factory_id]) {
         selection[uniq.token_factory_id] = [];
     }
 
     const index = selection[uniq.token_factory_id].findIndex((x) => x == uniq.id);
     if (index <= -1) {
+        if (getCountLeft(requirement.token_factory_id, requirement.count) <= 0) return;
         selection[uniq.token_factory_id].push(uniq.id);
     } else {
         selection[uniq.token_factory_id].splice(index, 1);
