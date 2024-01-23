@@ -12,10 +12,10 @@
                         v-for="user_uniq in getSelectableUniqs(uniq.token_factory_id)"
                         :key="updateIndex"
                         class="p-2 rounded hover:bg-neutral-600"
-                        :class="getUniqClasses(uniq.token_factory_id, user_uniq)"
-                        @click="toggleUniq(uniq.token_factory_id, user_uniq)"
+                        :class="getUniqClasses(user_uniq)"
+                        @click="toggleUniq(user_uniq)"
                     >
-                        {{ user_uniq }}#{{ getUniqSerial(user_uniq) }}
+                        {{ user_uniq.token_factory_id }}#{{ user_uniq.serial_number }}
                     </button>
                 </div>
             </div>
@@ -47,7 +47,7 @@ const emits = defineEmits<{ (e: 'cancel'): void }>();
 const props = defineProps<{
     username: string;
     uniqs: I.Uniq[];
-    swap: FactoryPurchaseReq & { index: number };
+    swap: FactoryPurchaseReq;
     factory: number;
 }>();
 
@@ -73,8 +73,8 @@ async function finalizeRequirements() {
             data: {
                 purchase: {
                     token_factory_id: props.factory, // 4030
-                    index: props.swap.index,
-                    max_price: '100.00000000 UOS',
+                    index: props.swap.id,
+                    max_price: props.swap.converted_price,
                     buyer: props.username,
                     receiver: props.username,
                     promoter_id: null,
@@ -90,10 +90,10 @@ async function finalizeRequirements() {
     try {
         const result = await window['ultra'].signTransaction(trx);
         console.log(result);
-        alert(result.toString());
+        alert("Transaction successfully signed: " + result.data.transactionHash);
     } catch (err) {
         console.log(err);
-        alert(err.toString());
+        alert("Failed to sign transaction: " + err.message + ((err.data && err.data.error && err.data.error.what) ? ` (${err.data.error.what})` : ""));
     }
 
     emits('cancel');
@@ -123,27 +123,27 @@ function getCountLeft(token_factory_id: number, max_count: number) {
     return max_count - selection[token_factory_id].length;
 }
 
-function toggleUniq(token_factory_id: number, id: number) {
-    if (!selection[token_factory_id]) {
-        selection[token_factory_id] = [];
+function toggleUniq(uniq: I.Uniq) {
+    if (!selection[uniq.token_factory_id]) {
+        selection[uniq.token_factory_id] = [];
     }
 
-    const index = selection[token_factory_id].findIndex((x) => x == id);
+    const index = selection[uniq.token_factory_id].findIndex((x) => x == uniq.id);
     if (index <= -1) {
-        selection[token_factory_id].push(token_factory_id);
+        selection[uniq.token_factory_id].push(uniq.id);
     } else {
-        selection[token_factory_id].splice(index, 1);
+        selection[uniq.token_factory_id].splice(index, 1);
     }
 
     updateIndex.value += 1;
 }
 
-function getUniqClasses(token_factory_id: number, id: number) {
-    if (!selection[token_factory_id]) {
+function getUniqClasses(uniq: I.Uniq) {
+    if (!selection[uniq.token_factory_id]) {
         return ['bg-neutral-700'];
     }
 
-    if (selection[token_factory_id].find((x) => x == id)) {
+    if (selection[uniq.token_factory_id].find((x) => x == uniq.id)) {
         return ['bg-neutral-500', 'hover:bg-neutral-400'];
     } else {
         return ['bg-neutral-700'];
@@ -169,18 +169,7 @@ function getRequiredUniqs(): SwapRequirement[] {
     });
 }
 
-function getUniqSerial(id: number): number {
-    const index = props.uniqs.findIndex((x) => x.id == id);
-    if (index <= -1) {
-        return 0;
-    }
-
-    console.log('it wa sfond');
-
-    return props.uniqs[index].serial_number;
-}
-
-function getSelectableUniqs(id: number): number[] {
+function getSelectableUniqs(id: number): I.Uniq[] {
     const usableUniqs = [];
     for (let i = 0; i < props.uniqs.length; i++) {
         const token_factory_id = props.uniqs[i].token_factory_id;
@@ -188,7 +177,7 @@ function getSelectableUniqs(id: number): number[] {
             continue;
         }
 
-        usableUniqs.push(token_factory_id);
+        usableUniqs.push(props.uniqs[i]);
     }
 
     return usableUniqs;

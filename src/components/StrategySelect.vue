@@ -12,8 +12,8 @@
                     <div>id</div>
                     <div>{{ swap.id }}</div>
                 </div>
-                <div class="text-sm font-bold">Required Uniq Factories</div>
-                <div v-for="(factory, index) in uniq_factories[swap.id]" :key="index">
+                <div v-if="uniq_factories[swap.id].length" class="text-sm font-bold">Required Uniq Factories</div>
+                <div v-if="uniq_factories[swap.id].length" v-for="(factory, index) in uniq_factories[swap.id]" :key="index">
                     <div
                         class="flex flex-col w-full justify-between pl-4 bg-neutral-600 border border-neutral-500 rounded p-4"
                     >
@@ -22,6 +22,14 @@
                             <div>( {{ getUniqCount(factory.id) }} / {{ getCountRequired(swap, factory.id) }} )</div>
                         </div>
                         <div class="text-xs">{{ getStrategyName(getStrategy(swap, factory.id)) }}</div>
+                    </div>
+                </div>
+                <div v-if="swap.price" class="text-sm font-bold">Swap Price</div>
+                <div v-if="swap.price" class="flex flex-row w-full justify-between bg-neutral-600 border border-neutral-500 rounded p-4">
+                    <div v-if="swap.price.endsWith('UOS')">{{ swap.price }}</div>
+                    <div v-if="swap.price.endsWith('USD')" class="flex flex-row w-full justify-between items-center">
+                        <div>{{ swap.price }}</div>
+                        <div>(~{{ swap.converted_price }})</div>
                     </div>
                 </div>
                 <button
@@ -61,12 +69,12 @@ const emits = defineEmits<{ (e: 'cancel'): void }>();
 
 let isRefreshing = ref<boolean>(false);
 let user_uniqs = ref<I.Uniq[]>([]);
-let user_available_swaps = ref<(FactoryPurchaseReq & { index: number })[]>([]);
+let user_available_swaps = ref<(FactoryPurchaseReq)[]>([]);
 let uniq_factories = ref<{ [requirement_id: string]: I.ResponseFactory[] }>({});
 
 let selected_swap = ref<FactoryPurchaseReq | undefined>(undefined);
 
-function selectSwap(swap: FactoryPurchaseReq & { index: number }) {
+function selectSwap(swap: FactoryPurchaseReq) {
     selected_swap.value = swap;
 }
 
@@ -114,8 +122,8 @@ async function findSwappableUniqs(api: UltraAPI) {
     let index = 0;
     for (let purchaseOption of props.factoryPurchaseOptions) {
         if (!purchaseOption.purchase_option_with_uniqs) {
-            index += 1;
-            continue;
+           index += 1;
+           continue;
         }
 
         if (purchaseOption.purchase_option_with_uniqs.factories.length <= 0) {
@@ -124,29 +132,36 @@ async function findSwappableUniqs(api: UltraAPI) {
         }
 
         let meetsRequirements = true;
-        let factories: I.ResponseFactory[] = [];
-        for (let swappable of purchaseOption.purchase_option_with_uniqs.factories) {
-            if (user_uniqs[swappable.token_factory_id]) {
-                meetsRequirements = false;
-                break;
+        if (purchaseOption.purchase_option_with_uniqs) {
+            let factories: I.ResponseFactory[] = [];
+            for (let swappable of purchaseOption.purchase_option_with_uniqs.factories) {
+                if (user_uniqs[swappable.token_factory_id]) {
+                    meetsRequirements = false;
+                    break;
+                }
+
+                if (getUniqCount(swappable.token_factory_id) < swappable.count) {
+                    meetsRequirements = false;
+                    break;
+                }
+
+                const response = await api.factory(swappable.token_factory_id).get();
+                factories.push(response);
             }
 
-            if (getUniqCount(swappable.token_factory_id) < swappable.count) {
-                meetsRequirements = false;
-                break;
-            }
-
-            const response = await api.factory(swappable.token_factory_id).get();
-            factories.push(response);
+            uniq_factories.value[purchaseOption.id] = factories;
+        } else {
+            uniq_factories.value[purchaseOption.id] = [];
         }
 
-        uniq_factories.value[purchaseOption.id] = factories;
         if (!meetsRequirements) {
             index += 1;
             continue;
         }
 
-        user_available_swaps.value.push({ ...purchaseOption, index });
+        purchaseOption.converted_price = await FactoryHelper.getConvertedPurchasePrice(api, purchaseOption.price);
+
+        user_available_swaps.value.push({ ...purchaseOption });
         index += 1;
     }
 }
