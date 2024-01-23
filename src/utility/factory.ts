@@ -38,6 +38,6 @@ export async function getConvertedPurchasePrice(api: UltraAPI, price: string) {
 
     if (!price) return null;
     let priceFloat = parseFloat(price.match(/[+-]?\d+(\.\d+)?/g)[0]);
-    let resultPrice = priceFloat / conversionRate;
+    let resultPrice = priceFloat / conversionRate * oracleConversionRateMarkup;
     return resultPrice.toFixed(8) + ' UOS';
 }
